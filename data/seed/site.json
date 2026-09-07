@@ -1,0 +1,168 @@
+{
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "home": {
+    "hero": {
+      "eyebrow": "Aviation Photography Blog",
+      "greeting": "你好",
+      "welcome": "欢迎来到 Hugo.aviation",
+      "primaryButton": "查看航空作品",
+      "secondaryButton": "浏览航迹故事"
+    },
+    "metrics": [
+      {
+        "label": "FOCAL RANGE",
+        "value": "50-400mm"
+      },
+      {
+        "label": "PRIMARY SUBJECT",
+        "value": "Airliners"
+      },
+      {
+        "label": "BASE AIRPORT",
+        "value": "ZGGG / CAN"
+      },
+      {
+        "label": "LAST UPDATE",
+        "value": "2026.07"
+      }
+    ],
+    "images": [
+      {
+        "slot": "gallery-1",
+        "src": "/media/uploads/demo/example-1.jpg",
+        "alt": "Demo image 1",
+        "title": "Demo 1",
+        "description": "Synthetic demonstration content."
+      },
+      {
+        "slot": "gallery-2",
+        "src": "/media/uploads/demo/example-2.jpg",
+        "alt": "Demo image 2",
+        "title": "Demo 2",
+        "description": "Synthetic demonstration content."
+      },
+      {
+        "slot": "gallery-3",
+        "src": "/media/uploads/demo/example-3.jpg",
+        "alt": "Demo image 3",
+        "title": "Demo 3",
+        "description": "Synthetic demonstration content."
+      },
+      {
+        "slot": "gallery-4",
+        "src": "/media/uploads/demo/example-4.jpg",
+        "alt": "Demo image 4",
+        "title": "Demo 4",
+        "description": "Synthetic demonstration content."
+      },
+      {
+        "slot": "gallery-5",
+        "src": "/media/uploads/demo/example-5.jpg",
+        "alt": "Demo image 5",
+        "title": "Demo 5",
+        "description": "Synthetic demonstration content."
+      },
+      {
+        "slot": "story-media",
+        "src": "/media/uploads/demo/example-6.jpg",
+        "alt": "Demo image 6",
+        "title": "Demo 6",
+        "description": "Synthetic demonstration content."
+      },
+      {
+        "slot": "journal-1",
+        "src": "/media/uploads/demo/example-7.jpg",
+        "alt": "Demo image 7",
+        "title": "Demo 7",
+        "description": "Synthetic demonstration content."
+      },
+      {
+        "slot": "journal-2",
+        "src": "/media/uploads/demo/example-8.jpg",
+        "alt": "Demo image 8",
+        "title": "Demo 8",
+        "description": "Synthetic demonstration content."
+      },
+      {
+        "slot": "journal-3",
+        "src": "/media/uploads/demo/example-9.jpg",
+        "alt": "Demo image 9",
+        "title": "Demo 9",
+        "description": "Synthetic demonstration content."
+      },
+      {
+        "slot": "airport-map",
+        "src": "/media/uploads/demo/example-10.jpg",
+        "alt": "Demo image 10",
+        "title": "Demo 10",
+        "description": "Synthetic demonstration content."
+      }
+    ],
+    "airportCovers": {},
+    "story": {
+      "blocks": [
+        {
+          "title": "从观景台读懂机坪",
+          "body": "航站楼、滑行线、廊桥和地勤车辆不断改变画面；飞机停靠的位置，也在讲述机场的运行节奏。"
+        },
+        {
+          "title": "等飞机，也等画面归位",
+          "body": "从推出到滑行，每一步都只有短暂窗口。我会等机身、前景和跑道线条落在最清楚的位置。"
+        },
+        {
+          "title": "把机场的秩序留在照片里",
+          "body": "塔台、机位与远处起降的飞机共同构成层次，让照片不只记录某一架飞机，也保留当时的现场。"
+        }
+      ]
+    },
+    "journal": {
+      "title": "机场边的拍摄手记",
+      "intro": "从晴空进近、夜间滑行到繁忙货运机坪，用三组画面记录不同光线下的机身姿态与机场秩序。",
+      "posts": [
+        {
+          "date": "DAYLIGHT / APPROACH",
+          "title": "雪绒花 A350 划过晴空",
+          "body": "起落架放下后，细长机翼、两台发动机和红色机首在蓝天里一目了然；干净侧面让涂装成为画面焦点。"
+        },
+        {
+          "date": "NIGHT / TAXI",
+          "title": "华航彩绘机穿过夜色",
+          "body": "滑行灯、航灯与跑道反光围住机身，彩绘在低照度中仍保留清楚层次。"
+        },
+        {
+          "date": "CARGO / GROUND OPS",
+          "title": "两架 747 的货运机坪",
+          "body": "日本货物航空与 Air ACT 的 747 前后错落，滑行线、机位和不同距离把繁忙机坪整理出清楚层次。"
+        }
+      ]
+    },
+    "about": {
+      "title": "你好，我是 Hugo.aviation。",
+      "body": "我长期拍摄民航客机、机场运行与飞行途中的天空景观。这个 blog 会持续整理我喜欢的飞机、光线和机位。",
+      "stats": [
+        {
+          "value": "40",
+          "label": "演示作品"
+        },
+        {
+          "value": "0",
+          "label": "真实机场"
+        },
+        {
+          "value": "0",
+          "label": "真实机型"
+        }
+      ]
+    },
+    "contact": {
+      "emailLabel": "电子邮件",
+      "emailHref": "mailto:hello@example.com",
+      "douyinLabel": "抖音",
+      "douyinHref": "https://example.com/",
+      "instagramLabel": "Instagram",
+      "instagramHref": "https://example.com/",
+      "jetphotosLabel": "JetPhotos",
+      "jetphotosHref": "https://example.com/"
+    }
+  }
+}

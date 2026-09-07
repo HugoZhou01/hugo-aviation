@@ -1,0 +1,12 @@
+{
+  "name": "Hugo.aviation",
+  "short_name": "Hugo.aviation",
+  "description": "Hugo 的个人航空摄影作品",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "zh-CN"
+}

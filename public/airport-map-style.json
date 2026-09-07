@@ -1,0 +1,217 @@
+{
+  "version": 8,
+  "name": "Hugo Aviation Airport Log",
+  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "sources": {
+    "openmaptiles": {
+      "type": "vector",
+      "url": "https://tiles.openfreemap.org/planet",
+      "attribution": "© OpenStreetMap contributors"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#292a2c"
+      }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "paint": {
+        "fill-antialias": false,
+        "fill-color": "#101113"
+      }
+    },
+    {
+      "id": "ice",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landcover",
+      "maxzoom": 8,
+      "filter": [
+        "match",
+        ["get", "subclass"],
+        ["ice_shelf", "glacier"],
+        true,
+        false
+      ],
+      "paint": {
+        "fill-color": "#343538",
+        "fill-opacity": 0.74
+      }
+    },
+    {
+      "id": "wood",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landcover",
+      "minzoom": 7,
+      "filter": ["==", ["get", "class"], "wood"],
+      "paint": {
+        "fill-color": "#232527",
+        "fill-opacity": 0.48
+      }
+    },
+    {
+      "id": "residential",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landuse",
+      "minzoom": 7,
+      "filter": ["==", ["get", "class"], "residential"],
+      "paint": {
+        "fill-color": "#303135",
+        "fill-opacity": 0.46
+      }
+    },
+    {
+      "id": "parks",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landuse",
+      "minzoom": 8,
+      "filter": ["==", ["get", "class"], "park"],
+      "paint": {
+        "fill-color": "#242729",
+        "fill-opacity": 0.7
+      }
+    },
+    {
+      "id": "state-boundaries",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "minzoom": 3,
+      "filter": ["==", ["get", "admin_level"], 4],
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "rgba(191, 194, 199, 0.16)",
+        "line-dasharray": [2, 2],
+        "line-width": ["interpolate", ["linear"], ["zoom"], 3, 0.45, 10, 1.1]
+      }
+    },
+    {
+      "id": "country-boundaries",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "filter": [
+        "all",
+        ["==", ["get", "admin_level"], 2],
+        ["!", ["has", "claimed_by"]]
+      ],
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "rgba(215, 217, 221, 0.34)",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 0, 0.5, 6, 1.2, 12, 2]
+      }
+    },
+    {
+      "id": "motorways",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "minzoom": 7,
+      "filter": ["==", ["get", "class"], "motorway"],
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "rgba(177, 181, 187, 0.22)",
+        "line-width": ["interpolate", ["exponential", 1.25], ["zoom"], 7, 0.45, 16, 3.5]
+      }
+    },
+    {
+      "id": "major-roads",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "minzoom": 10,
+      "filter": [
+        "match",
+        ["get", "class"],
+        ["primary", "secondary", "tertiary", "trunk"],
+        true,
+        false
+      ],
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "rgba(177, 181, 187, 0.17)",
+        "line-width": ["interpolate", ["exponential", 1.25], ["zoom"], 10, 0.35, 16, 2.6]
+      }
+    },
+    {
+      "id": "buildings",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "building",
+      "minzoom": 13,
+      "paint": {
+        "fill-color": "#1b1c1e",
+        "fill-outline-color": "rgba(207, 210, 215, 0.12)"
+      }
+    },
+    {
+      "id": "aeroway-areas",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "aeroway",
+      "minzoom": 8,
+      "filter": [
+        "all",
+        ["match", ["geometry-type"], ["MultiPolygon", "Polygon"], true, false],
+        ["match", ["get", "class"], ["runway", "taxiway"], true, false]
+      ],
+      "paint": {
+        "fill-color": "rgba(210, 214, 220, 0.24)"
+      }
+    },
+    {
+      "id": "aeroway-taxiways",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "aeroway",
+      "minzoom": 10,
+      "filter": ["==", ["get", "class"], "taxiway"],
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "rgba(194, 198, 204, 0.38)",
+        "line-width": ["interpolate", ["exponential", 1.35], ["zoom"], 11, 0.8, 17, 8]
+      }
+    },
+    {
+      "id": "aeroway-runways",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "aeroway",
+      "minzoom": 9,
+      "filter": ["==", ["get", "class"], "runway"],
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "rgba(222, 225, 230, 0.58)",
+        "line-width": ["interpolate", ["exponential", 1.4], ["zoom"], 9, 1, 17, 18]
+      }
+    }
+  ]
+}

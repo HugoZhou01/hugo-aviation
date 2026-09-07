@@ -1,0 +1,30 @@
+{
+  "name": "hugo-aviation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Editable reconstruction of the Hugo.aviation Cloudflare Pages deployment.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "clean": "node scripts/build.mjs --clean-only",
+    "dev": "node scripts/dev-server.mjs",
+    "test": "node --test",
+    "verify": "node scripts/verify.mjs",
+    "functions:build": "node scripts/build-functions.mjs",
+    "check": "node scripts/build.mjs && node --test && node scripts/verify.mjs && node scripts/build-functions.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1",
+    "maplibre-gl": "6.7.0",
+    "sharp": "0.35.4",
+    "wrangler": "4.127.1"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HugoZhou01/hugo-aviation.git"
+  }
+}

@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Hugo.aviation Admin</title>
+  <meta name="theme-color" content="#111214">
+  <meta name="color-scheme" content="dark">
+  <!-- BUILD:PREVIEW_INDEX -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/generated/admin.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/admin" aria-label="Hugo.aviation Admin">
+      <strong>Hugo.aviation Admin</strong>
+      <span>Content Control</span>
+    </a>
+    <nav class="view-tabs" aria-label="后台页面">
+      <button class="view-tab is-active" type="button" data-view="home">首页编辑</button>
+      <button class="view-tab" type="button" data-view="works">全部作品</button>
+      <button class="view-tab" type="button" data-view="backups">备份</button>
+      <button class="view-tab" type="button" data-view="storage">存储</button>
+    </nav>
+    <div class="top-links">
+      <a class="nav-link" href="/">前台首页</a>
+      <a class="nav-link" href="/works">作品页</a>
+    </div>
+  </header>
+
+  <main class="shell">
+    <aside class="sidebar" aria-label="后台登录与状态">
+      <section class="panel compact">
+        <div class="panel-body stack">
+          <div class="field">
+            <label for="adminToken">Admin Token</label>
+            <div class="token-row">
+              <input id="adminToken" type="password" autocomplete="current-password" placeholder="输入后台密钥">
+              <button class="button" type="button" id="saveToken">确认</button>
+            </div>
+          </div>
+          <div class="status" id="status">
+            <strong>正在载入</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel compact">
+        <div class="panel-body stack">
+          <h2>状态</h2>
+          <div class="quick-stats">
+            <div class="quick-stat">
+              <strong id="photoCount">0</strong>
+              <span>作品库照片</span>
+            </div>
+            <div class="quick-stat">
+              <strong id="needsReviewCount">0</strong>
+              <span>待整理作品</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <div class="workspace">
+      <section class="view" data-view-panel="home">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h1>首页内容编辑</h1>
+            </div>
+            <button class="button primary slim section-save" type="button" data-save-home>保存</button>
+          </div>
+          <div class="panel-body stack">
+            <div class="section-title">
+              <h2>摄影数据条</h2>
+            </div>
+            <div class="metric-list" id="metricList"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>首页图片与卡片文案</h2>
+            </div>
+            <button class="button primary slim section-save" type="button" data-save-home>保存</button>
+          </div>
+          <div class="panel-body">
+            <div class="image-editor-list" id="homeImageList"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>机场地图代表图</h2>
+            </div>
+            <button class="button primary slim section-save" type="button" data-save-home>保存</button>
+          </div>
+          <div class="panel-body">
+            <div class="image-editor-list" id="airportCoverList"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>航迹、手记与关于数据</h2>
+            </div>
+            <button class="button primary slim section-save" type="button" data-save-home>保存</button>
+          </div>
+          <div class="panel-body stack" id="homeTextSections"></div>
+        </section>
+      </section>
+
+      <section class="view" data-view-panel="works" hidden>
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h1>全部作品管理</h1>
+            </div>
+          </div>
+          <div class="panel-body stack">
+            <form class="stack" id="uploadForm">
+              <input class="file-input" id="fileInput" name="file" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif,.jpg,.jpeg,.png,.webp,.avif,.gif" aria-describedby="uploadFormatNote" multiple>
+              <input class="file-input" id="folderInput" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif,.jpg,.jpeg,.png,.webp,.avif,.gif" aria-describedby="uploadFormatNote" webkitdirectory directory multiple>
+
+              <button class="drop-zone" id="dropZone" type="button">
+                <span id="dropCopy">
+                  <strong>选择或拖入照片</strong>
+                </span>
+                <span class="preview" id="preview" hidden></span>
+              </button>
+
+              <div class="queue-summary" id="queueSummary" hidden></div>
+              <p class="muted upload-format-note" id="uploadFormatNote">支持 JPEG、PNG、WebP、AVIF、GIF；HEIC、HEIF、TIFF、HIF 请先转换为 JPEG 或 WebP。</p>
+
+              <div class="action-row">
+                <button class="button" type="button" id="chooseFiles">选择照片</button>
+                <button class="button" type="button" id="chooseFolder">选择文件夹</button>
+              </div>
+
+              <div class="field">
+                <label for="title">文件名</label>
+                <input id="title" type="text">
+              </div>
+
+              <div class="grid-3">
+                <div class="field">
+                  <label for="airline">航空公司</label>
+                  <input id="airline" type="text" list="airlineOptions" autocomplete="off">
+                </div>
+                <div class="field">
+                  <label for="aircraft">机型</label>
+                  <input id="aircraft" type="text" list="aircraftOptions" autocomplete="off">
+                </div>
+                <div class="field">
+                  <label for="registration">注册号</label>
+                  <input id="registration" type="text" autocapitalize="characters" spellcheck="false">
+                </div>
+                <div class="field">
+                  <label for="airport">机场三字码</label>
+                  <input id="airport" type="text" list="airportOptions" autocomplete="off" placeholder="CAN" maxlength="3" pattern="[A-Za-z]{3}" autocapitalize="characters" spellcheck="false">
+                </div>
+                <div class="field">
+                  <label for="capturedAt">拍摄日期</label>
+                  <input id="capturedAt" type="date">
+                </div>
+                <div class="field">
+                  <label for="phase">飞行阶段</label>
+                  <select id="phase">
+                    <option value="">未指定</option>
+                    <option value="ground">地面停场</option>
+                    <option value="taxi">滑行</option>
+                    <option value="takeoff">起飞</option>
+                    <option value="landing">进近 / 降落</option>
+                    <option value="cruise">空中 / 巡航</option>
+                    <option value="other">其他</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>时间分类</label>
+                <div class="category-grid" id="categoryGrid">
+                  <label class="check-chip"><input type="radio" name="photoCategory" value="day" checked>日间</label>
+                  <label class="check-chip"><input type="radio" name="photoCategory" value="night">夜间</label>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="spot">机位 / 参数</label>
+                <input id="spot" type="text">
+              </div>
+
+              <div class="field">
+                <label for="notes">备注</label>
+                <textarea id="notes"></textarea>
+              </div>
+
+              <div class="action-row">
+                <button class="button primary" type="submit" id="uploadButton">上传并发布</button>
+                <button class="button" type="button" id="clearForm">清空上传表单</button>
+              </div>
+              <datalist id="airlineOptions"></datalist>
+              <datalist id="aircraftOptions"></datalist>
+              <datalist id="airportOptions"></datalist>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel" id="editPanel" hidden>
+          <div class="panel-header">
+            <div>
+              <h2>编辑选中作品</h2>
+            </div>
+            <div class="panel-actions">
+              <span class="completion-badge" id="editCompleteness">资料 0/5</span>
+              <button class="button" type="button" id="cancelEdit">关闭</button>
+            </div>
+          </div>
+          <div class="panel-body stack">
+            <div class="edit-preview" id="editPreview"></div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="editTitle">文件名</label>
+                <input id="editTitle" type="text">
+              </div>
+              <div class="field">
+                <label for="editCategory">分类</label>
+                <select id="editCategory">
+                  <option value="day">日间</option>
+                  <option value="night">夜间</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-3">
+              <div class="field">
+                <label for="editAirline">航空公司</label>
+                <input id="editAirline" type="text" list="airlineOptions" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="editAircraft">机型</label>
+                <input id="editAircraft" type="text" list="aircraftOptions" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="editRegistration">注册号</label>
+                <input id="editRegistration" type="text" autocapitalize="characters" spellcheck="false">
+              </div>
+              <div class="field">
+                <label for="editAirport">机场三字码</label>
+                <input id="editAirport" type="text" list="airportOptions" autocomplete="off" maxlength="3" pattern="[A-Za-z]{3}" autocapitalize="characters" spellcheck="false">
+              </div>
+              <div class="field">
+                <label for="editCapturedAt">拍摄日期</label>
+                <input id="editCapturedAt" type="date">
+              </div>
+              <div class="field">
+                <label for="editPhase">飞行阶段</label>
+                <select id="editPhase">
+                  <option value="">未指定</option>
+                  <option value="ground">地面停场</option>
+                  <option value="taxi">滑行</option>
+                  <option value="takeoff">起飞</option>
+                  <option value="landing">进近 / 降落</option>
+                  <option value="cruise">空中 / 巡航</option>
+                  <option value="other">其他</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="editSpot">机位 / 参数</label>
+              <input id="editSpot" type="text">
+            </div>
+            <div class="field">
+              <label for="editNotes">备注</label>
+              <textarea id="editNotes"></textarea>
+            </div>
+            <div class="action-row">
+              <button class="button primary" type="button" id="saveEdit">保存修改</button>
+              <button class="button" type="button" id="saveAndNext">保存并下一张</button>
+              <button class="button" type="button" data-move="front">置顶</button>
+              <button class="button" type="button" data-move="up">上移</button>
+              <button class="button" type="button" data-move="down">下移</button>
+              <button class="button danger" type="button" id="deletePhoto">删除照片</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>作品库</h2>
+              <p class="muted" id="countText">0 张照片</p>
+            </div>
+          </div>
+          <div class="panel-body stack">
+            <div class="completion-strip" id="completionStrip">
+              <button class="completion-stat" type="button" data-audit-shortcut="empty">
+                <strong id="emptyAuditCount">0</strong>
+                <span>待整理</span>
+              </button>
+              <button class="completion-stat" type="button" data-audit-shortcut="ready">
+                <strong id="readyAuditCount">0</strong>
+                <span>基本完成</span>
+              </button>
+              <button class="completion-stat" type="button" data-audit-shortcut="no-thumb">
+                <strong id="thumbnailAuditCount">0</strong>
+                <span>待优化缩略图</span>
+              </button>
+            </div>
+            <section class="thumbnail-job-panel" id="thumbnailJobPanel" aria-live="polite" hidden>
+              <div class="thumbnail-job-head">
+                <div class="thumbnail-job-copy">
+                  <strong id="thumbnailJobTitle">缩略图优化</strong>
+                  <span id="thumbnailJobDetail"></span>
+                </div>
+                <span class="thumbnail-job-percent" id="thumbnailJobPercent">0%</span>
+              </div>
+              <div class="thumbnail-job-track" aria-hidden="true">
+                <span class="thumbnail-job-bar" id="thumbnailJobBar"></span>
+              </div>
+              <div class="thumbnail-job-footer">
+                <span class="thumbnail-job-meta" id="thumbnailJobMeta"></span>
+                <button class="button slim" type="button" id="retryThumbnailFailures" hidden>重试失败项</button>
+              </div>
+            </section>
+            <div class="library-toolbar">
+              <label class="sr-only" for="searchInput">搜索作品档案</label>
+              <input id="searchInput" type="search" placeholder="搜索作品档案" aria-label="搜索作品档案">
+              <select id="filterSelect" aria-label="按时间分类筛选">
+                <option value="all">全部</option>
+                <option value="day">日间</option>
+                <option value="night">夜间</option>
+              </select>
+              <select id="sortSelect" aria-label="作品排序">
+                <option value="manual">手动顺序</option>
+                <option value="newest">最新上传</option>
+                <option value="oldest">最早上传</option>
+                <option value="capture-newest">拍摄日期：新到旧</option>
+                <option value="capture-oldest">拍摄日期：旧到新</option>
+                <option value="title">文件名 A-Z</option>
+              </select>
+              <div class="library-actions">
+                <button class="button" type="button" id="toggleBatch">批量选择</button>
+                <button class="button" type="button" id="optimizeThumbnails">优化缩略图</button>
+              </div>
+            </div>
+            <div class="catalog-toolbar">
+              <select id="catalogFilter" aria-label="按档案状态筛选">
+                <option value="">档案状态：全部</option>
+                <option value="empty">待整理</option>
+                <option value="ready">基本完成</option>
+                <option value="no-thumb">待优化缩略图</option>
+              </select>
+              <select id="airlineFilter" aria-label="按航空公司筛选">
+                <option value="">航空公司：全部</option>
+              </select>
+              <select id="aircraftFilter" aria-label="按机型筛选">
+                <option value="">机型：全部</option>
+              </select>
+              <select id="airportFilter" aria-label="按机场筛选">
+                <option value="">机场：全部</option>
+              </select>
+              <select id="phaseFilter" aria-label="按飞行阶段筛选">
+                <option value="">飞行阶段：全部</option>
+                <option value="ground">地面停场</option>
+                <option value="taxi">滑行</option>
+                <option value="takeoff">起飞</option>
+                <option value="landing">进近 / 降落</option>
+                <option value="cruise">空中 / 巡航</option>
+                <option value="other">其他</option>
+              </select>
+            </div>
+            <section class="batch-panel" id="batchPanel" aria-label="批量编辑" hidden>
+              <div class="batch-head">
+                <strong id="selectedCount">已选 0 张</strong>
+                <div class="batch-actions">
+                  <button class="button slim" type="button" id="selectVisible">全选当前结果</button>
+                  <button class="button slim" type="button" id="clearSelection">取消选择</button>
+                  <button class="button slim" type="button" id="exitBatch">退出批量</button>
+                </div>
+              </div>
+              <div class="batch-fields">
+                <div class="field">
+                  <label for="batchCategory">时间分类</label>
+                  <select id="batchCategory">
+                    <option value="">保持不变</option>
+                    <option value="day">日间</option>
+                    <option value="night">夜间</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="batchAirline">航空公司</label>
+                  <input id="batchAirline" type="text" list="airlineOptions" autocomplete="off">
+                </div>
+                <div class="field">
+                  <label for="batchAircraft">机型</label>
+                  <input id="batchAircraft" type="text" list="aircraftOptions" autocomplete="off">
+                </div>
+                <div class="field">
+                  <label for="batchRegistration">注册号</label>
+                  <input id="batchRegistration" type="text" autocapitalize="characters" spellcheck="false">
+                </div>
+                <div class="field">
+                  <label for="batchAirport">机场三字码</label>
+                  <input id="batchAirport" type="text" list="airportOptions" autocomplete="off" maxlength="3" pattern="[A-Za-z]{3}" autocapitalize="characters" spellcheck="false">
+                </div>
+                <div class="field">
+                  <label for="batchCapturedAt">拍摄日期</label>
+                  <input id="batchCapturedAt" type="date">
+                </div>
+                <div class="field">
+                  <label for="batchPhase">飞行阶段</label>
+                  <select id="batchPhase">
+                    <option value="">保持不变</option>
+                    <option value="ground">地面停场</option>
+                    <option value="taxi">滑行</option>
+                    <option value="takeoff">起飞</option>
+                    <option value="landing">进近 / 降落</option>
+                    <option value="cruise">空中 / 巡航</option>
+                    <option value="other">其他</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="batchSpot">机位 / 参数</label>
+                  <input id="batchSpot" type="text">
+                </div>
+              </div>
+              <div class="batch-footer">
+                <label class="toggle-control" for="batchOnlyEmpty">
+                  <input id="batchOnlyEmpty" type="checkbox" checked>
+                  <span>只填充空白字段</span>
+                </label>
+                <button class="button primary" type="button" id="applyBatch">应用到所选作品</button>
+              </div>
+            </section>
+            <div class="photo-list" id="photoList">
+              <div class="empty">正在加载</div>
+            </div>
+            <div class="danger-row">
+              <button class="button danger" type="button" id="clearLibrary">清空作品库</button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" data-view-panel="backups" hidden>
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h1>资产备份</h1>
+            </div>
+          </div>
+          <div class="panel-body stack">
+            <input class="backup-file" id="backupFile" type="file" accept="application/json,.json">
+            <div class="backup-toolbar">
+              <button class="button primary" type="button" id="createBackup">创建备份</button>
+              <button class="button" type="button" id="chooseBackup">导入备份</button>
+            </div>
+            <div class="backup-list" id="backupList">
+              <div class="empty">暂无备份</div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" data-view-panel="storage" hidden>
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h1>R2 存储</h1>
+            </div>
+            <button class="button primary slim" type="button" id="scanStorage">扫描</button>
+          </div>
+          <div class="panel-body stack">
+            <div class="storage-overview">
+              <div class="storage-stat">
+                <strong id="storageTotal">--</strong>
+                <span>本站桶占用</span>
+              </div>
+              <div class="storage-stat">
+                <strong id="storageObjects">--</strong>
+                <span>全部对象</span>
+              </div>
+              <div class="storage-stat">
+                <strong id="storageReferenced">--</strong>
+                <span>正在引用</span>
+              </div>
+              <div class="storage-stat">
+                <strong id="storageEligible">--</strong>
+                <span>可安全清理</span>
+              </div>
+            </div>
+            <div class="storage-meter">
+              <div class="storage-meter-head">
+                <span id="storageMeterLabel">Free 存储参考</span>
+                <span id="storageCheckedAt">尚未扫描</span>
+              </div>
+              <div class="storage-meter-track" aria-hidden="true">
+                <div class="storage-meter-bar" id="storageMeterBar"></div>
+              </div>
+            </div>
+            <div class="action-row">
+              <button class="button danger" type="button" id="cleanupStorage" disabled>清理未引用文件</button>
+              <span class="muted" id="storageSummary"></span>
+            </div>
+            <div class="storage-list" id="storageList">
+              <div class="empty">等待扫描</div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <div class="home-picker" id="homePhotoPicker" role="dialog" aria-modal="true" aria-labelledby="homePickerTitle" aria-hidden="true" inert>
+    <div class="home-picker-shell">
+      <header class="home-picker-header">
+        <div class="home-picker-heading">
+          <span id="homePickerSlotLabel">首页图片</span>
+          <h2 id="homePickerTitle">选择作品</h2>
+        </div>
+        <button class="icon-button" type="button" id="homePickerClose" aria-label="关闭图片选择" title="关闭">×</button>
+      </header>
+
+      <div class="home-picker-toolbar">
+        <div class="home-picker-search">
+          <input id="homePickerSearch" type="search" autocomplete="off" placeholder="搜索文件名、航司、机型、机场或注册号" aria-label="搜索作品库">
+        </div>
+        <select id="homePickerTime" aria-label="按时间筛选">
+          <option value="">时间：全部</option>
+          <option value="day">日间</option>
+          <option value="night">夜间</option>
+        </select>
+        <select id="homePickerAirline" aria-label="按航空公司筛选"></select>
+        <select id="homePickerAircraft" aria-label="按机型筛选"></select>
+        <select id="homePickerAirport" aria-label="按机场筛选"></select>
+      </div>
+
+      <div class="home-picker-summary">
+        <span id="homePickerCount" aria-live="polite">0 张照片</span>
+        <div class="home-picker-summary-actions">
+          <select class="home-picker-sort" id="homePickerSort" aria-label="作品排序">
+            <option value="newest">最新上传</option>
+            <option value="manual">作品库顺序</option>
+            <option value="capture-newest">拍摄日期</option>
+            <option value="title">文件名 A-Z</option>
+          </select>
+          <button class="home-picker-reset" type="button" id="homePickerReset">重置筛选</button>
+        </div>
+      </div>
+
+      <div class="home-picker-content">
+        <div class="home-picker-scroll" id="homePickerScroll">
+          <div class="home-picker-gallery" id="homePickerGallery"></div>
+          <button class="button home-picker-more" type="button" id="homePickerMore" hidden>显示更多</button>
+        </div>
+        <aside class="home-picker-inspector" id="homePickerInspector" aria-live="polite">
+          <div class="home-picker-inspector-empty">选择一张照片</div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/generated/admin.js" defer></script>
+</body>
+</html>
