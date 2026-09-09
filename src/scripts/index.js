@@ -170,7 +170,8 @@
     const regionNames = typeof Intl.DisplayNames === "function"
       ? new Intl.DisplayNames(["zh-CN"], { type: "region" })
       : null;
-    const airportDisplayName = (airport) => cleanText(airport?.nameZh)
+    const airportDisplayName = (airport) => (window.HugoI18n?.language === "en" ? cleanText(airport?.nameEn) : "")
+      || cleanText(airport?.nameZh)
       || cleanText(airport?.nameEn)
       || normalizeAirportCode(airport?.iata)
       || "机场";
@@ -195,7 +196,7 @@
           iata: entry.iata,
           icao: entry.icao,
           name: airportDisplayName(entry),
-          city: cleanText(entry.city) || entry.iata,
+          city: (window.HugoI18n?.language === "en" ? window.HugoI18n.english(cleanText(entry.city)) : cleanText(entry.city)) || entry.iata,
           photoCount: entry.photos.length,
         },
       })),
@@ -235,6 +236,9 @@
             icao: normalizeIcaoCode(airport.icao),
             coordinates: airport.coordinates.map(Number),
           }));
+          window.HugoI18n?.addTranslations(Object.fromEntries(airportCatalog
+            .filter(airport => airport.nameZh && airport.nameEn)
+            .map(airport => [airport.nameZh, airport.nameEn])));
           updateAirportLog(homepagePhotos);
           return airportCatalog;
         })
@@ -566,6 +570,8 @@
       }
     };
 
+    window.addEventListener("languagechange", () => updateAirportLog(homepagePhotos));
+
     const loadMapLibre = () => {
       if (mapLibre) return Promise.resolve(mapLibre);
       if (mapLibrePromise) return mapLibrePromise;
@@ -647,7 +653,7 @@
         });
       }
 
-      if (airportMap.getStyle().glyphs && !airportMap.getLayer("airport-city-labels")) {
+      if (!airportMap.getLayer("airport-city-labels")) {
           airportMap.addLayer({
             id: "airport-city-labels",
             type: "symbol",
@@ -659,7 +665,7 @@
                 "  ", {},
                 ["get", "iata"], { "font-scale": 0.82 }
               ],
-              "text-font": ["Noto Sans Regular"],
+              "text-font": ["Helvetica Neue", "Helvetica", "Arial", "PingFang SC", "Microsoft YaHei"],
               "text-size": ["interpolate", ["linear"], ["zoom"], 1, 10, 7, 12],
               "text-offset": [0, 1.5],
               "text-anchor": "top",
@@ -1124,6 +1130,7 @@
       document.body.classList.add("is-lightbox-open");
       siteHeader.inert = true;
       pageMain.inert = true;
+      document.querySelector("footer").inert = true;
       lightboxClose.focus({ preventScroll: true });
     };
 
@@ -1135,6 +1142,7 @@
       document.body.classList.remove("is-lightbox-open");
       siteHeader.inert = false;
       pageMain.inert = false;
+      document.querySelector("footer").inert = false;
       lastLightboxTrigger?.focus({ preventScroll: true });
       lightboxCloseTimer = window.setTimeout(() => {
         if (lightbox.classList.contains("is-open")) return;

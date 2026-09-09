@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { transform } from "esbuild";
 
@@ -85,7 +85,10 @@ if (process.argv.includes("--clean-only")) {
 }
 
 await mkdir(outputRoot, { recursive: true });
-await cp(publicRoot, outputRoot, { recursive: true });
+await cp(publicRoot, outputRoot, {
+  recursive: true,
+  filter: path => basename(path) !== ".DS_Store" && !basename(path).startsWith("._"),
+});
 await mkdir(generatedRoot, { recursive: true });
 await writeFile(join(generatedRoot, previewIndexName), previewIndexJson);
 await rm(join(outputRoot, "assets", "previews", "index.json"), { force: true });
@@ -106,13 +109,23 @@ await Promise.all([
 await writeFile(join(outputRoot, "photos.json"), `${JSON.stringify(photoSeed)}\n`);
 
 const outputs = [];
+const languageScript = await transform(await readFile(join(sourceRoot, "scripts", "i18n.js"), "utf8"), {
+  loader: "js", minify: true, target: "es2022", legalComments: "none",
+});
+const languageScriptName = `i18n.${digest(languageScript.code)}.js`;
+await writeFile(join(generatedRoot, languageScriptName), languageScript.code);
+const languageStyle = await readFile(join(sourceRoot, "styles", "i18n.css"), "utf8");
+const languageControls = `<div class="language-switcher" role="group" aria-label="Language / 语言" data-no-translate>
+  <button type="button" data-language="zh-CN" lang="zh-CN" aria-pressed="true">中文</button>
+  <button type="button" data-language="en" lang="en" aria-pressed="false">English</button>
+</div>`;
 for (const page of pages) {
   const [sourceStyle, sourceScript] = await Promise.all([
     readFile(join(sourceRoot, "styles", `${page}.css`), "utf8"),
     readFile(join(sourceRoot, "scripts", `${page}.js`), "utf8"),
   ]);
   const [{ code: style }, { code: script }] = await Promise.all([
-    transform(sourceStyle, { loader: "css", minify: true, target: "es2022", legalComments: "none" }),
+    transform(sourceStyle + (page === "admin" ? "" : languageStyle), { loader: "css", minify: true, target: "es2022", legalComments: "none" }),
     transform(sourceScript, { loader: "js", minify: true, target: "es2022", legalComments: "none" }),
   ]);
   const styleName = `${page}.${digest(style)}.css`;
@@ -126,6 +139,13 @@ for (const page of pages) {
     .replace("<!-- BUILD:PREVIEW_INDEX -->", `<meta name="photo-preview-index" content="/assets/generated/${previewIndexName}">`)
     .replaceAll(`assets/generated/${page}.css`, `assets/generated/${styleName}`)
     .replaceAll(`assets/generated/${page}.js`, `assets/generated/${scriptName}`);
+
+  if (page !== "admin") {
+    html = html.replace('<meta charset="UTF-8">', `<meta charset="UTF-8">\n  <script src="/assets/generated/${languageScriptName}"></script>`);
+    html = page === "index"
+      ? html.replace("</footer>", `${languageControls}</footer>`)
+      : html.replace("</main>", `</main><footer class="gallery-footer">© 2026 Hugo.aviation. All images and words reserved.${languageControls}</footer>`);
+  }
 
   if (page === "index") {
     // Replace only markup sources; keep embedded metadata's original URLs for exact version matching.

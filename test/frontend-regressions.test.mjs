@@ -728,12 +728,16 @@ test("production build escapes seed data, preserves complete fallback, and links
     [photos.photos[30].thumbSrc]: "/assets/previews/later.123456abcdef.webp",
   };
   await mkdir(join(fixture, "public", "assets", "previews"), { recursive: true });
+  await writeFile(join(fixture, "public", ".DS_Store"), "private folder metadata");
+  await writeFile(join(fixture, "public", "assets", "._preview.jpg"), "resource fork metadata");
   await Promise.all([
     writeFile(join(fixture, "data", "seed", "photos.json"), JSON.stringify(photos)),
     writeFile(join(fixture, "data", "seed", "site.json"), JSON.stringify(site)),
     writeFile(join(fixture, "public", "assets", "previews", "index.json"), JSON.stringify(previews)),
   ]);
   await runFile(process.execPath, [join(fixture, "scripts", "build.mjs")], { cwd: fixture });
+  await assert.rejects(readFile(join(fixture, "dist", ".DS_Store")), { code: "ENOENT" });
+  await assert.rejects(readFile(join(fixture, "dist", "assets", "._preview.jpg")), { code: "ENOENT" });
   const built = Object.fromEntries(await Promise.all(["index", "works", "admin"].map(async (page) => [
     page, await readFile(join(fixture, "dist", `${page}.html`), "utf8"),
   ])));

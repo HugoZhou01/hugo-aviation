@@ -249,6 +249,9 @@
         photo?.registration,
         photo?.airport,
         phaseLabels[photo?.phase] || photo?.phase,
+        photo?.phase,
+        window.HugoI18n?.english(phaseLabels[photo?.phase] || ""),
+        window.HugoI18n?.english(photo?.alt || ""),
         photo?.capturedAt,
         photo?.spot,
         photo?.notes,
@@ -1076,6 +1079,7 @@
       document.body.classList.add("is-lightbox-open");
       topControls.inert = true;
       pageMain.inert = true;
+      document.querySelector("footer").inert = true;
       lightboxClose.focus({ preventScroll: true });
     };
 
@@ -1092,6 +1096,7 @@
       document.body.classList.remove("is-lightbox-open");
       topControls.inert = false;
       pageMain.inert = false;
+      document.querySelector("footer").inert = false;
       clearLightboxPreloads();
       lastLightboxTrigger?.focus({ preventScroll: true });
       lightboxCloseTimer = window.setTimeout(() => {
