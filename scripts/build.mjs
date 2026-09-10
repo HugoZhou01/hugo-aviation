@@ -3,6 +3,7 @@ import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { transform } from "esbuild";
+import sharp from "sharp";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRoot = join(projectRoot, "src");
@@ -90,6 +91,17 @@ await cp(publicRoot, outputRoot, {
   filter: path => basename(path) !== ".DS_Store" && !basename(path).startsWith("._"),
 });
 await mkdir(generatedRoot, { recursive: true });
+// Derive every installed-app icon from the same editable vector. No font or
+// remote image dependency; maskable artwork stays inside the central safe zone.
+const logo = await readFile(join(publicRoot, "favicon.svg"));
+const iconRoot = join(outputRoot, "assets", "icons");
+await mkdir(iconRoot, { recursive: true });
+await Promise.all([180, 192, 512].map(size => sharp(logo).resize(size, size)
+  .png().toFile(join(iconRoot, `aviation-${size}.png`))));
+const maskableMark = await sharp(logo).resize(360, 360).png().toBuffer();
+await sharp({ create: { width: 512, height: 512, channels: 4, background: "#101113" } })
+  .composite([{ input: maskableMark, gravity: "centre" }]).png()
+  .toFile(join(iconRoot, "aviation-maskable-512.png"));
 await writeFile(join(generatedRoot, previewIndexName), previewIndexJson);
 await rm(join(outputRoot, "assets", "previews", "index.json"), { force: true });
 await rm(join(outputRoot, "assets", "vendor", "maplibre-5.24.0"), { recursive: true, force: true });
@@ -136,6 +148,7 @@ for (const page of pages) {
 
   const sourceHtml = await readFile(join(sourceRoot, "pages", `${page}.html`), "utf8");
   let html = sourceHtml
+    .replace('<link rel="icon" href="/favicon.svg" type="image/svg+xml">', '<link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">\n  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/aviation-180.png">')
     .replace("<!-- BUILD:PREVIEW_INDEX -->", `<meta name="photo-preview-index" content="/assets/generated/${previewIndexName}">`)
     .replaceAll(`assets/generated/${page}.css`, `assets/generated/${styleName}`)
     .replaceAll(`assets/generated/${page}.js`, `assets/generated/${scriptName}`);
