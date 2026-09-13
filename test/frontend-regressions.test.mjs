@@ -43,6 +43,7 @@ function subject(page, names, bindings = {}, prelude = "", exports = names) {
   const context = vm.createContext({
     URL,
     URLSearchParams,
+    AbortSignal,
     structuredClone,
     console: { warn() {} },
     ...bindings,
@@ -385,6 +386,26 @@ test("works falls back to the complete static manifest when the API is unavailab
   assert.equal(requests[0].options.cache, "no-cache", "public API requests must permit ETag revalidation");
   assert.equal(requests[0].options.priority, "low");
   assert.equal(requests[1].options.cache, "force-cache");
+  assert.ok(requests.every(({ options }) => options.signal instanceof AbortSignal));
+});
+
+test("a stalled photo API is aborted and the complete fallback can still load", async () => {
+  const requests = [];
+  const { loadPhotos } = subject("works", ["hasPhotoManifest", "normalizePhotos", "cleanText", "createPhotosRevision", "loadPhotos"], {
+    AbortSignal: { timeout: () => AbortSignal.timeout(5) },
+    fetch: async (url, options) => {
+      requests.push(url);
+      if (url.startsWith("/api/")) return new Promise((resolve, reject) => {
+        options.signal.addEventListener("abort", () => reject(options.signal.reason), { once: true });
+      });
+      return { ok: true, json: async () => ({ photos: [{ id: "saved", src: "/media/saved.jpg" }] }) };
+    },
+  });
+  const keepAlive = setTimeout(() => {}, 1000);
+  try {
+    assert.equal((await loadPhotos()).photos[0].id, "saved");
+    assert.deepEqual(requests, ["/api/photos", "photos.json"]);
+  } finally { clearTimeout(keepAlive); }
 });
 
 test("malformed API manifests fall back, but an explicit empty manifest remains authoritative", async () => {

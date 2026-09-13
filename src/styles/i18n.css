@@ -15,11 +15,12 @@ html:lang(en) .eyebrow { font-weight:500; letter-spacing:.14em; }
 html:lang(en) .hero-welcome { white-space:normal; max-width:16ch; font-size:clamp(38px,6vw,82px); line-height:1.08; text-wrap:balance; }
 html:lang(en) .story-copy h3, html:lang(en) .section-title h2, html:lang(en) .post h3 { text-wrap:balance; letter-spacing:-.025em; }
 html:lang(en) .story-copy p, html:lang(en) .post-body p, html:lang(en) .about-copy p { line-height:1.65; }
-html:lang(en) .filter-tabs { min-width:0; overflow-x:auto; scrollbar-width:none; justify-content:flex-start; }
+html:lang(en) .filter-tabs { display:flex; min-width:0; overflow-x:auto; scrollbar-width:none; justify-content:space-between; }
 html:lang(en) .filter-tab { flex:0 0 auto; white-space:nowrap; }
 html:lang(en) #airportDetailName { overflow-wrap:anywhere; }
 @media (max-width:600px) {
   html:lang(en) .nav { gap:16px; }
+  html:lang(en) .filter-tabs { justify-content:flex-start; gap:6px; }
   html:lang(en) .filter-tab { padding-inline:8px; min-height:32px; }
   html:lang(en) .catalog-title, html:lang(en) .catalog-result { font-size:12px; }
   html:lang(en) .stats { gap:16px; }

@@ -217,7 +217,7 @@
 
     const loadAirportCatalog = () => {
       if (airportCatalogPromise) return airportCatalogPromise;
-      airportCatalogPromise = fetch("/airports.json", { cache: "force-cache" })
+      airportCatalogPromise = fetch("/airports.json", { signal: globalThis.AbortSignal?.timeout?.(10000), cache: "force-cache" })
         .then((response) => {
           if (!response.ok) throw new Error("Airport catalog unavailable");
           return response.json();
@@ -876,7 +876,7 @@
 
     const loadSiteConfig = async () => {
       try {
-        const response = await fetch("/api/site", { cache: "no-cache", priority: "low" });
+        const response = await fetch("/api/site", { signal: globalThis.AbortSignal?.timeout?.(10000), cache: "no-cache", priority: "low" });
         if (!response.ok) return false;
         const config = await response.json();
         const revision = cleanText(config?.updatedAt) || JSON.stringify(config?.home || {});
@@ -943,6 +943,7 @@
       for (const source of sources) {
         try {
           const response = await fetch(source, {
+            signal: globalThis.AbortSignal?.timeout?.(10000),
             cache: source.startsWith("/api/") ? "no-cache" : "force-cache",
             priority: "low",
           });
@@ -959,7 +960,7 @@
 
     const loadHomepageContent = async () => {
       try {
-        const response = await fetch("/api/home", { cache: "no-cache", priority: "low" });
+        const response = await fetch("/api/home", { signal: globalThis.AbortSignal?.timeout?.(10000), cache: "no-cache", priority: "low" });
         if (!response.ok) throw new Error(`Homepage request failed (${response.status})`);
         const data = await response.json();
         if (!data?.site?.home || !Array.isArray(data?.manifest?.photos)) throw new Error("Invalid homepage response");

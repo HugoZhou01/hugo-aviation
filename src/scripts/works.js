@@ -162,7 +162,7 @@
         return Promise.resolve(false);
       }
       if (previewIndexPromise) return previewIndexPromise;
-      previewIndexPromise = fetch(previewIndexUrl, { cache: "force-cache", priority: "low" })
+      previewIndexPromise = fetch(previewIndexUrl, { signal: globalThis.AbortSignal?.timeout?.(10000), cache: "force-cache", priority: "low" })
         .then(async (response) => {
           if (!response.ok) throw new Error(`Preview index returned ${response.status}`);
           const sources = await response.json();
@@ -554,6 +554,7 @@
       for (const source of sources) {
         try {
           const response = await fetch(source, {
+            signal: globalThis.AbortSignal?.timeout?.(10000),
             cache: source.startsWith("/api/") ? "no-cache" : "force-cache",
             priority: source.startsWith("/api/") ? "low" : "auto",
           });

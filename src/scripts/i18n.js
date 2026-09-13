@@ -1,6 +1,9 @@
 /* Translation is a presentation layer: never change stored photo/site records. */
 (() => {
   const translations = {
+    "此页面不存在": "This page could not be found",
+    "链接可能已失效，或页面已被移动。照片仍在作品集中等你。": "The link may be out of date, or the page may have moved. You can still explore the photographs in the gallery.",
+    "页面导航": "Page navigation",
     "Hugo.aviation | 航空摄影 Blog": "Hugo.aviation | Aviation Photography Blog",
     "全部航空作品 | Hugo.aviation": "All Aviation Photos | Hugo.aviation",
     "Hugo.aviation 的个人航空摄影作品，记录客机、机场运行、进近起降与不同光线下的飞行瞬间。": "A personal aviation photography portfolio by Hugo.aviation, capturing airliners, airport operations, approaches and departures, and moments of flight in changing light.",
@@ -113,7 +116,8 @@
     if (!link.matches('a[href]')) return;
     const href = link.getAttribute("href");
     if (!href || href.startsWith("#")) return;
-    const url = new URL(href, location.href);
+    let url;
+    try { url = new URL(href, location.href); } catch { return; }
     if (url.origin !== location.origin || !["/", "/works"].includes(url.pathname)) return;
     url.searchParams.set("lang", language === "en" ? "en" : "zh");
     const localized = `${url.pathname}${url.search}${url.hash}`;
@@ -137,7 +141,7 @@
       }
       return;
     }
-    if (root.nodeType !== 1 || root.matches("script,style,noscript,textarea,[data-no-translate]")) return;
+    if (root.nodeType !== 1 || root.closest("script,style,noscript,textarea,[data-no-translate]")) return;
     localizeLink(root);
     for (const name of attributes) {
       if (root.hasAttribute(name)) update(root, name, () => root.getAttribute(name), value => root.setAttribute(name, value));
@@ -187,6 +191,15 @@
       refresh();
     },
   };
+  // Back/forward can restore a URL with a different language without reloading.
+  window.addEventListener("popstate", () => {
+    const next = normalize(new URL(location.href).searchParams.get("lang"));
+    if (!next || next === language) return;
+    language = next;
+    document.documentElement.lang = language;
+    refresh();
+    window.dispatchEvent(new CustomEvent("languagechange"));
+  });
   observe();
   document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => setLanguage(button.dataset.language)));

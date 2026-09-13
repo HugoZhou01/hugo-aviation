@@ -192,3 +192,7 @@ for (const page of pages) {
 
 console.log(`Built ${outputs.length} pages into dist/`);
 outputs.forEach((entry) => console.log(`  ${entry}`));
+const errorHtml = await readFile(join(sourceRoot, "pages", "404.html"), "utf8");
+await writeFile(join(outputRoot, "404.html"), errorHtml.replace("<!-- BUILD:ERROR_LANGUAGE -->",
+  `<script src="/assets/generated/${languageScriptName}"></script>`));
+console.log("Built localized 404 page");

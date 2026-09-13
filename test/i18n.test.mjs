@@ -8,16 +8,16 @@ function setup({ url = "https://example.com/", saved = null, languages = ["zh-CN
   const callbacks = {};
   const nodes = [];
   const writes = [];
-  const root = { nodeType: 1, childNodes: nodes, matches: () => false, hasAttribute: () => false };
+  const root = { nodeType: 1, childNodes: nodes, matches: () => false, closest: () => false, hasAttribute: () => false };
   const context = vm.createContext({
     URL, location: new URL(url), navigator: { languages },
     localStorage: { getItem() { if (blocked) throw Error("blocked"); return saved; }, setItem(k, v) { if (blocked) throw Error("blocked"); writes.push([k, v]); } },
     document: { documentElement: root, querySelector: () => null, querySelectorAll: () => [], addEventListener: (k, cb) => { callbacks[k] = cb; } },
-    history: { replaceState: () => {} }, window: { dispatchEvent: () => {} },
+    history: { replaceState: () => {} }, window: { dispatchEvent: () => {}, addEventListener: (k, cb) => { callbacks[k] = cb; } },
     CustomEvent: class {}, MutationObserver: class { observe() {} disconnect() {} },
   });
   vm.runInContext(source, context);
-  return { api: context.window.HugoI18n, root, writes, nodes, ready: () => callbacks.DOMContentLoaded() };
+  return { api: context.window.HugoI18n, root, writes, nodes, context, callbacks, ready: () => callbacks.DOMContentLoaded() };
 }
 
 test("language negotiation respects explicit links, saved choice and browser preferences", () => {
@@ -37,6 +37,31 @@ test("blocked browser storage does not prevent initialization or manual switchin
   assert.equal(root.lang, "en");
   api.setLanguage("zh");
   assert.equal(root.lang, "zh-CN");
+});
+
+test("history navigation restores the URL language without overwriting stored preference", () => {
+  const { root, nodes, ready, context, callbacks, writes } = setup();
+  const node = { nodeType: 3, nodeValue: "你好", parentElement: { closest: () => false } };
+  nodes.push(node);
+  ready();
+  context.location = new URL("https://example.com/works?lang=en&q=A321");
+  callbacks.popstate();
+  assert.equal(root.lang, "en");
+  assert.equal(node.nodeValue, "Hello");
+  context.location = new URL("https://example.com/works?lang=zh&q=A321");
+  callbacks.popstate();
+  assert.equal(node.nodeValue, "你好");
+  assert.equal(writes.length, 0);
+});
+
+test("malformed links do not abort translation of the rest of the page", () => {
+  const { nodes, ready } = setup({ saved: "en" });
+  nodes.push({ nodeType: 1, closest: () => false, matches: selector => selector === 'a[href]',
+    getAttribute: () => "https://[", hasAttribute: () => false, childNodes: [] });
+  const text = { nodeType: 3, nodeValue: "你好", parentElement: { closest: () => false } };
+  nodes.push(text);
+  assert.doesNotThrow(ready);
+  assert.equal(text.nodeValue, "Hello");
 });
 
 test("switching is reversible and newly edited source text does not reuse a stale translation", () => {
@@ -72,11 +97,11 @@ test("all current site and photo seed text has English coverage, without changin
 
 test("all public static labels and metadata have English coverage", async () => {
   const { api } = setup();
-  for (const page of ["index", "works"]) {
+  for (const page of ["index", "works", "404"]) {
     const html = await readFile(new URL(`../src/pages/${page}.html`, import.meta.url), "utf8");
     const labels = [...html.matchAll(/>([^<>]+)</g)].map(match => match[1]);
     labels.push(...[...html.matchAll(/(?:alt|aria-label|placeholder|content)="([^"]+)"/g)].map(match => match[1]));
-    for (const label of labels.filter(value => /\p{Script=Han}/u.test(value))) {
+    for (const label of labels.filter(value => /\p{Script=Han}/u.test(value) && !["中文", "Language / 语言"].includes(value))) {
       assert.doesNotMatch(api.english(label), /\p{Script=Han}/u, label);
     }
   }
