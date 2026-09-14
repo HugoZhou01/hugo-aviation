@@ -213,7 +213,7 @@
     };
 
     const state = {
-      token: sessionStorage.getItem("hugo-admin-token") || "",
+      token: (() => { try { return sessionStorage.getItem("hugo-admin-token") || ""; } catch { return ""; } })(),
       activeView: "home",
       site: structuredClone(defaultSite),
       photos: [],
@@ -1123,6 +1123,7 @@
       renderMetrics();
       renderHomeMedia();
       renderHomeTextSections();
+      window.HugoContentEditor?.render(state.site, state.photos, saveHome);
     };
 
     const collectHome = () => {
@@ -1178,20 +1179,28 @@
     };
 
     const saveHome = async () => {
+      if (state.homeSaving) return;
       if (!state.token) {
         setStatus("缺少后台密钥", "请先确认 Admin Token。", "bad");
         return;
       }
+      state.homeSaving = true;
+      globalThis.window?.HugoContentEditor?.setBusy(true);
       try {
         await loadAdminData();
         const payload = collectHome();
+        globalThis.window?.HugoContentEditor?.collect(payload);
         setStatus("正在保存", "", "warn");
         state.site = await api("/api/site", { method: "PUT", body: JSON.stringify(payload) }, true);
         renderHome();
-        await loadBackups({ quiet: true });
-        setStatus("已保存", "", "good");
+        try { await loadBackups({ quiet: true }); }
+        catch { setStatus("已保存", "备份列表暂时无法刷新；内容已成功保存。", "warn"); return; }
+        setStatus("已保存", "中文、英文与首页配置已同步。", "good");
       } catch (error) {
         setStatus("首页保存失败", error.message, "bad");
+      } finally {
+        state.homeSaving = false;
+        globalThis.window?.HugoContentEditor?.setBusy(false);
       }
     };
 
@@ -1199,21 +1208,21 @@
       const token = elements.token.value.trim();
       state.token = token;
       if (!token) {
-        sessionStorage.removeItem("hugo-admin-token");
+        try { sessionStorage.removeItem("hugo-admin-token"); } catch { /* Storage can be blocked. */ }
         setStatus("密钥错误", "", "bad");
         return;
       }
       elements.saveToken.disabled = true;
       try {
         await api("/api/auth/check", { method: "POST" }, true);
-        sessionStorage.setItem("hugo-admin-token", token);
+        try { sessionStorage.setItem("hugo-admin-token", token); } catch { /* Keep the login in memory. */ }
         await loadAdminData();
         await loadBackups({ quiet: true });
         setStatus("密钥正确", "", "good");
       } catch (error) {
         if (error.status === 401) {
           state.token = "";
-          sessionStorage.removeItem("hugo-admin-token");
+          try { sessionStorage.removeItem("hugo-admin-token"); } catch { /* Storage can be blocked. */ }
         }
         setStatus(error.status === 401 ? "密钥错误" : "管理数据加载失败", error.message, "bad");
       } finally {
@@ -2725,7 +2734,7 @@
         if (error.status === 401) {
           state.token = "";
           elements.token.value = "";
-          sessionStorage.removeItem("hugo-admin-token");
+          try { sessionStorage.removeItem("hugo-admin-token"); } catch { /* Storage can be blocked. */ }
         }
         setStatus(error.status === 401 ? "登录已失效" : "管理数据加载失败", error.message, "bad");
       }

@@ -351,8 +351,9 @@ test("site validation accepts all recovered seed content and legacy image record
   });
   const seedResult = await save(original);
   assert.equal(seedResult.status, 200);
-  assert.deepEqual((await seedResult.json()).home, original.home);
-  const legacy = structuredClone(original);
+  const saved = await seedResult.json();
+  assert.deepEqual(saved.home, original.home);
+  const legacy = structuredClone(saved);
   legacy.home.images.forEach((image) => { delete image.slot; });
   const legacyResult = await save(legacy);
   assert.equal(legacyResult.status, 200);
@@ -372,6 +373,30 @@ test("site edits reject unsafe links and media references before creating a back
   });
   assert.equal(response.status, 400);
   assert.equal((await loadBackupIndex(env.HUGO_PHOTOS)).backups.length, 0);
+});
+
+test("bilingual content round trips, remains public text only, and rejects stale editors", async () => {
+  const env = await createEnvironment();
+  const original = await (await callApi(env, "site")).json();
+  const edited = structuredClone(original);
+  edited.localization = { version: 1, entries: { entry_0: { source: "你好", zh: "欢迎", en: "Welcome aboard" } } };
+  const save = value => callApi(env, "site", { method: "PUT", token: "test-secret",
+    headers: { "content-type": "application/json" }, body: JSON.stringify(value) });
+  assert.equal((await save(edited)).status, 200);
+  const response = await callApi(env, "translations");
+  const content = await response.json();
+  assert.deepEqual(content.entries, edited.localization.entries);
+  assert.equal(content.home, undefined);
+  assert.equal((await callApi(env, "translations", { method: "HEAD" })).status, 200);
+  assert.equal((await callApi(env, "translations", { headers: { "if-none-match": response.headers.get("etag") } })).status, 304);
+  assert.equal((await save(original)).status, 409);
+  assert.equal((await loadBackupIndex(env.HUGO_PHOTOS)).backups.length, 1);
+  const current = await (await callApi(env, "site")).json();
+  for (const entry of [{ source: "你好", en: {} }, { source: "你好", en: "" }, { source: "你好", en: "Hi", html: "bad" }]) {
+    current.localization.entries.entry_0 = entry;
+    assert.equal((await save(current)).status, 400);
+  }
+  assert.equal((await loadBackupIndex(env.HUGO_PHOTOS)).backups.length, 1);
 });
 
 test("JSON mutation routes require an explicit JSON content type", async () => {

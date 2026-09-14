@@ -39,6 +39,17 @@ test("blocked browser storage does not prevent initialization or manual switchin
   assert.equal(root.lang, "zh-CN");
 });
 
+test("editorial Chinese and English remain independent through refresh and language changes", () => {
+  const { api, nodes, ready } = setup();
+  const node = { nodeType: 3, nodeValue: "你好", parentElement: { closest: () => false } };
+  nodes.push(node); ready();
+  api.setLocalization({ entries: { entry_0: { source: "你好", zh: "欢迎", en: "Welcome $& aboard" } } });
+  assert.equal(node.nodeValue, "欢迎");
+  api.setLanguage("en"); assert.equal(node.nodeValue, "Welcome $& aboard");
+  api.setLanguage("zh"); assert.equal(node.nodeValue, "欢迎");
+  api.setLocalization({ entries: {} }); assert.equal(node.nodeValue, "你好");
+});
+
 test("history navigation restores the URL language without overwriting stored preference", () => {
   const { root, nodes, ready, context, callbacks, writes } = setup();
   const node = { nodeType: 3, nodeValue: "你好", parentElement: { closest: () => false } };

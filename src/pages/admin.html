@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-content-editor>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,6 +20,7 @@
     <nav class="view-tabs" aria-label="后台页面">
       <button class="view-tab is-active" type="button" data-view="home">首页编辑</button>
       <button class="view-tab" type="button" data-view="works">全部作品</button>
+      <button class="view-tab" type="button" data-view="content">中英文文案</button>
       <button class="view-tab" type="button" data-view="backups">备份</button>
       <button class="view-tab" type="button" data-view="storage">存储</button>
     </nav>
@@ -64,6 +65,12 @@
     </aside>
 
     <div class="workspace">
+      <section class="view" data-view-panel="content" hidden>
+        <section class="panel">
+          <div class="panel-header"><div><h1>中英文内容工作台</h1><p class="muted">分别编辑两种语言，无需修改代码。保存时自动建立备份。</p></div></div>
+          <div class="panel-body" id="bilingualEditor"><p>请先验证后台密钥，载入现有内容。</p></div>
+        </section>
+      </section>
       <section class="view" data-view-panel="home">
         <section class="panel">
           <div class="panel-header">
@@ -73,6 +80,7 @@
             <button class="button primary slim section-save" type="button" data-save-home>保存</button>
           </div>
           <div class="panel-body stack">
+            <div id="homeGeneralFields"></div>
             <div class="section-title">
               <h2>摄影数据条</h2>
             </div>

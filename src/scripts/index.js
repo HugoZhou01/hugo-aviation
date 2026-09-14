@@ -823,6 +823,7 @@
     const applySiteConfig = (config) => {
       const home = config?.home;
       if (!home) return;
+      window.HugoI18n?.setLocalization(config.localization);
 
       document.querySelectorAll("[data-site-text]").forEach((element) => {
         const path = element.dataset.siteText;

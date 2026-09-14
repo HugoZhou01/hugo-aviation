@@ -64,7 +64,7 @@ const server = createServer(async (request, response) => {
     const method = request.method || "GET";
     const url = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
 
-    if (["/api/photos", "/api/site", "/api/home"].includes(url.pathname)) {
+    if (["/api/photos", "/api/site", "/api/home", "/api/translations"].includes(url.pathname)) {
       if (method !== "GET" && method !== "HEAD") {
         response.writeHead(501, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
         return response.end(JSON.stringify({
@@ -83,6 +83,7 @@ const server = createServer(async (request, response) => {
       } else {
         const filename = url.pathname.endsWith("photos") ? "photos.json" : "site.json";
         data = JSON.parse(await readFile(join(seedRoot, filename), "utf8"));
+        if (url.pathname === "/api/translations") data = data.localization || { version: 1, entries: {} };
       }
       const body = JSON.stringify(data);
       response.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-cache",

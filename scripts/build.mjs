@@ -14,6 +14,14 @@ const seedRoot = join(projectRoot, "data", "seed");
 const mapLibreSourceRoot = join(projectRoot, "node_modules", "maplibre-gl");
 const mapLibreOutputRoot = join(outputRoot, "assets", "vendor", "maplibre-6.7.0");
 const pages = ["index", "works", "admin"];
+// Include English-only labels as well as the translation dictionary in the editor.
+const publicMarkup = await Promise.all(["index", "works"].map(page => readFile(join(sourceRoot, "pages", `${page}.html`), "utf8")));
+const decodeContent = text => text.replace(/&(?:amp|lt|gt|quot|apos|#39|nbsp);/g, entity => ({ "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&apos;": "'", "&#39;": "'", "&nbsp;": " " })[entity]).trim();
+const staticContent = [...new Set(publicMarkup.flatMap(markup => {
+  const html = markup.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, "").replace(/<!--[\s\S]*?-->/g, "");
+  return [...html.matchAll(/>([^<>]+)</g), ...html.matchAll(/(?:alt|title|aria-label|placeholder|content)="([^"]+)"/g)]
+    .map(match => decodeContent(match[1])).filter(text => text && !/^(https?:|width=|\/)/.test(text));
+}))];
 
 const digest = (value) => createHash("sha256").update(value).digest("hex").slice(0, 12);
 const inlineJson = (value) => JSON.stringify(value)
@@ -134,7 +142,8 @@ const languageControls = `<div class="language-switcher" role="group" aria-label
 for (const page of pages) {
   const [sourceStyle, sourceScript] = await Promise.all([
     readFile(join(sourceRoot, "styles", `${page}.css`), "utf8"),
-    readFile(join(sourceRoot, "scripts", `${page}.js`), "utf8"),
+    readFile(join(sourceRoot, "scripts", `${page}.js`), "utf8").then(async script => page === "admin"
+      ? `window.HugoStaticContent=${inlineJson(staticContent)};\n` + (await readFile(join(sourceRoot, "scripts", "admin-content.js"), "utf8")) + "\n" + script : script),
   ]);
   const [{ code: style }, { code: script }] = await Promise.all([
     transform(sourceStyle + (page === "admin" ? "" : languageStyle), { loader: "css", minify: true, target: "es2022", legalComments: "none" }),
@@ -159,6 +168,8 @@ for (const page of pages) {
       ? html.replace("</footer>", `${languageControls}</footer>`)
       : html.replace("</main>", `</main><footer class="gallery-footer">© 2026 Hugo.aviation. All images and words reserved.${languageControls}</footer>`);
   }
+  if (page === "admin") html = html.replace('<meta charset="UTF-8">',
+    `<meta charset="UTF-8">\n  <script src="/assets/generated/${languageScriptName}"></script>`);
 
   if (page === "index") {
     // Replace only markup sources; keep embedded metadata's original URLs for exact version matching.

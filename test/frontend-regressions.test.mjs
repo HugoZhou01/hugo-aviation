@@ -798,7 +798,9 @@ test("production build escapes seed data, preserves complete fallback, and links
       const data = await readFile(join(fixture, "dist", "assets", "generated", reference));
       assert.equal(createHash("sha256").update(data).digest("hex").slice(0, 12), match[1]);
       const source = await readFile(join(projectRoot, "src", match[2] === "js" ? "scripts" : "styles", `${page}.${match[2]}`));
-      assert.ok(data.length < source.length * 0.85, `${reference} must be materially minified`);
+      const editorBytes = page === "admin" && match[2] === "js"
+        ? (await readFile(join(projectRoot, "src", "scripts", "admin-content.js"))).length : 0;
+      assert.ok(data.length < (source.length + editorBytes) * 0.85, `${reference} must be materially minified`);
       if (match[2] === "js") assert.doesNotThrow(() => new vm.Script(data.toString("utf8")));
     }
     const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);

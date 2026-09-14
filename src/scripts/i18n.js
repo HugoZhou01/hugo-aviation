@@ -84,11 +84,16 @@
   const requested = new URL(location.href).searchParams.get("lang");
   let language = normalize(requested) || normalize(saved)
     || (navigator.languages || [navigator.language]).map(normalize).find(Boolean) || "en";
-  document.documentElement.lang = language;
+  const adminMode = document.documentElement.hasAttribute("data-content-editor");
+  if (!adminMode) document.documentElement.lang = language;
+  let editorial = new Map();
+  const localized = (source, locale) => editorial.get(source.trim())?.[locale];
 
   function english(value) {
     const text = String(value ?? "");
     const trimmed = text.trim();
+    const custom = localized(text, "en");
+    if (typeof custom === "string") return text.replace(trimmed, () => custom);
     if (Object.hasOwn(translations, trimmed)) return text.replace(trimmed, translations[trimmed]);
     // Structured labels retain all names, codes, numbers and camera parameters.
     let result = text
@@ -110,6 +115,10 @@
     return result.replace(/清除(.+)/g, "Clear $1").replace(/选项/g, " options").replace(/筛选/g, " filter").replace(/，/g, ", ");
   }
 
+  if (adminMode) {
+    window.HugoTranslationDefaults = { english, entries: { ...translations } };
+    return;
+  }
   const originals = new WeakMap();
   const attributes = ["alt", "title", "aria-label", "placeholder"];
   function localizeLink(link) {
@@ -130,7 +139,9 @@
     if (!record) originals.set(node, record = new Map());
     const previous = record.get(key);
     const source = previous && current === previous.output ? previous.source : current;
-    const output = language === "en" ? english(source) : source;
+    const zh = localized(source, "zh");
+    const output = language === "en" ? english(source)
+      : (typeof zh === "string" ? source.replace(source.trim(), () => zh) : source);
     record.set(key, { source, output });
     if (current !== output) write(output);
   }
@@ -185,6 +196,12 @@
   }
   window.HugoI18n = {
     get language() { return language; }, english, setLanguage,
+    setLocalization(value) {
+      editorial = new Map(Object.values(value?.entries || {})
+        .filter(entry => entry && typeof entry.source === "string")
+        .map(entry => [entry.source, entry]));
+      refresh();
+    },
     addTranslations(entries) {
       Object.assign(translations, entries);
       translationKeys = Object.keys(translations).sort((a, b) => b.length - a.length);
@@ -204,5 +221,11 @@
   document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => setLanguage(button.dataset.language)));
     refresh();
+    // Read only the compact editorial dictionary, never the admin secret.
+    if (typeof fetch === "function") fetch("/api/translations", {
+      cache: "no-cache", signal: globalThis.AbortSignal?.timeout?.(10000),
+    }).then(response => response.ok ? response.json() : null)
+      .then(value => { if (value) window.HugoI18n.setLocalization(value); })
+      .catch(() => { /* Built-in translations stay usable during an outage. */ });
   }, { once: true });
 })();

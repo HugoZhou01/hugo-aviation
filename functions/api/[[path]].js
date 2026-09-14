@@ -603,6 +603,27 @@ const normalizeContactHref = (value, label) => {
 const validateSite = (value) => {
   requireRecord(value, "Site payload");
   validateJsonTree(value);
+  if (value.localization !== undefined) {
+    const localization = requireRecord(value.localization, "Site localization");
+    if (localization.version !== 1) throw new HttpError(400, "Bad Request", "Unsupported localization version");
+    const entries = requireRecord(localization.entries, "Site localization.entries");
+    if (Object.keys(entries).length > 1500) throw new HttpError(400, "Bad Request", "Too many translations (maximum 1500)");
+    const sources = new Set();
+    for (const [key, entry] of Object.entries(entries)) {
+      if (!/^entry_[0-9]+$/.test(key)) throw new HttpError(400, "Bad Request", "Invalid translation entry key");
+      requireRecord(entry, "Translation entry");
+      if (Object.keys(entry).some(field => !["source", "zh", "en"].includes(field))
+        || typeof entry.source !== "string" || !entry.source.trim() || entry.source !== entry.source.trim()
+        || sources.has(entry.source)) throw new HttpError(400, "Bad Request", "Invalid or duplicate translation source");
+      sources.add(entry.source);
+      for (const locale of ["zh", "en"]) {
+        if (entry[locale] !== undefined && (typeof entry[locale] !== "string" || !entry[locale].trim())) {
+          throw new HttpError(400, "Bad Request", "Translations must be non-empty text");
+        }
+      }
+      if (entry.zh === undefined && entry.en === undefined) throw new HttpError(400, "Bad Request", "Translation entry is empty");
+    }
+  }
   const home = requireRecord(value.home, "Site home");
   const hero = requireRecord(home.hero, "Site home.hero");
   const metrics = requireRecordArray(home.metrics, "Site home.metrics", 50);
@@ -915,6 +936,13 @@ const handleRequest = async (context) => {
     return json({ ok: true });
   }
 
+  if (segments[0] === "translations" && segments.length === 1) {
+    if (method !== "GET" && method !== "HEAD") return methodNotAllowed(["GET", "HEAD", "OPTIONS"]);
+    const site = await loadSite(bucket);
+    const response = versionedJson(request, "translations", { ...(site.localization || { version: 1, entries: {} }), updatedAt: site.updatedAt });
+    return method === "HEAD" ? empty(response.status, response.headers) : response;
+  }
+
   if (segments[0] === "site" && segments.length === 1) {
     if (method === "GET" || method === "HEAD") {
       const site = await loadSite(bucket);
@@ -924,8 +952,12 @@ const handleRequest = async (context) => {
     if (method === "PUT") {
       await requireMutationAccess(request, env);
       return withMutationLease(bucket, "site:update", async () => {
-        const body = validateSite(await parseJsonBody(request, MAX_SITE_JSON_BYTES));
+        const input = await parseJsonBody(request, MAX_SITE_JSON_BYTES);
+        const body = validateSite(input);
         const currentSite = await loadSite(bucket);
+        if (input.updatedAt !== undefined && input.updatedAt !== currentSite.updatedAt) {
+          throw new HttpError(409, "Conflict", "站点内容已在其他窗口更新，请保留草稿并重新载入后再保存。");
+        }
         await createBackup(bucket, "编辑首页前自动备份");
         return json(await saveSite(bucket, currentSite, body));
       });

@@ -157,7 +157,7 @@
     .view-tabs {
       min-height: 40px;
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 8px;
       padding: 4px;
       border: 1px solid var(--line);
@@ -2056,3 +2056,15 @@
         font-size: 12px;
       }
     }
+/* Bilingual editorial workspace; bound rendering keeps large catalogs responsive. */
+.content-general-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.content-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.content-field input, .content-field textarea { width: 100%; box-sizing: border-box; }
+.content-field textarea { resize: vertical; line-height: 1.65; font-weight: 400; font-size: 14px; }
+.content-field [lang="en"] { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.content-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.content-toolbar input { flex: 1 1 240px; min-width: 0; }
+.content-toolbar select { width: auto; max-width: 100%; }
+.content-row { padding: 24px 0; border-top: 1px solid rgba(128, 128, 128, .25); }
+.content-source { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+@media (max-width: 700px) { .content-general-grid { grid-template-columns: 1fr; } }
